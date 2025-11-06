@@ -5,12 +5,16 @@
 
 import createApp from "./app";
 import { config } from "./config";
+import { connectToDatabase, closeDatabaseConnection } from "./config/database";
 
 /**
  * Starts the server
  */
-const startServer = (): void => {
+const startServer = async (): Promise<void> => {
   try {
+    // Connect to MongoDB
+    await connectToDatabase();
+
     // Create Express application
     const app = createApp();
 
@@ -32,10 +36,12 @@ const startServer = (): void => {
      * Handling termination signals
      * Allows clean server shutdown
      */
-    const gracefulShutdown = (signal: string): void => {
+    const gracefulShutdown = async (signal: string): Promise<void> => {
       console.log(`\n${signal} received. Shutting down server...`);
 
-      server.close(() => {
+      server.close(async () => {
+        // Close MongoDB connection
+        await closeDatabaseConnection();
         console.log("✅ Server closed successfully");
         process.exit(0);
       });
